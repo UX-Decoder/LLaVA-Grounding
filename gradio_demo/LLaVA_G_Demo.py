@@ -1,5 +1,4 @@
 
-# from .demo_modelpart import InferenceDemo
 import gradio as gr
 import os
 import cv2
@@ -26,9 +25,6 @@ def preprocess_multi_conv(
 ):
     conv = conversation_lib.default_conversation.copy()
     roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
-    # Apply prompt templates
-    #TODO: multi-turn conversation.
-    # conversations = []
     conv.messages = []
     for i, source in enumerate(sources):
         if roles[source[0]["from"]] != conv.roles[0]:
@@ -121,7 +117,6 @@ class InferenceDemo(object):
                 import re
                 pattern = re.compile(r'<span style=.*?>(.*?)</span>', re.DOTALL)  
                 
-                # 使用re.sub()函数来删除匹配到的所有<span>标签，只保留括号内的内容  
                 clean_text = pattern.sub(r'\1', text)  
                 
                 return clean_text
@@ -130,7 +125,7 @@ class InferenceDemo(object):
             valid_conversations = [aa for aa in valid_conversations if not (None in aa)]
             valid_conversations = [[delete_color(aa[0]), delete_color(aa[1])] for aa in valid_conversations]
             return valid_conversations
-        valid_conversations = filter_valid_conversations(history) # history[3:]  # the first three conversations are not valid
+        valid_conversations = filter_valid_conversations(history)
         dataset_dict = {
             "file_name": history[1][0][0],
             "image_id": 0,
@@ -217,7 +212,6 @@ def add_text(history, text, image, threshold_slider, temporature_slider, interac
             joint_sentence = " ".join(splitted_sentence)
             return joint_sentence
         def extract_text(sentence):
-            # Use regular expression to find and extract the text and number
             import re
             pattern = r"<g_s>|<g_e>"
             cleaned_text = re.sub(pattern, '', sentence)
@@ -227,16 +221,13 @@ def add_text(history, text, image, threshold_slider, temporature_slider, interac
         seg_start_index = find_start_idxes(text, "<seg>")
         if len(seg_start_index) > 0:
             count_obj = 0
-            # text = text[:tail_start_index[0]]
             subtexts = text.split(" <seg>")
             for subtext in subtexts:
                 if "<g_s>" in subtext:
-                    # subtext += "<g_e>"
                     start_idx = find_start_idxes(subtext, "<g_s>")[0]
                     text_pure = format_sentence([text_pure, format_sentence(subtext[:start_idx].split())])
                     text_ = extract_text(subtext[start_idx:])
                     text_pure += add_color_to_text(count_obj, text_)
-                    # text_pure = format_sentence([text_pure, format_sentence(text_.split())])
                     count_obj += 1
                 else:
                     text_pure = format_sentence([text_pure, format_sentence(subtext.split())])
@@ -245,8 +236,6 @@ def add_text(history, text, image, threshold_slider, temporature_slider, interac
         return text_pure
     def post_process_gd_response(path_ori_image, gd_results_per_image):
         def unresize_box(box, width, height):
-            # ori_size = max(width, height)
-            # ratio = ori_size / size
             ratio = min(width, height) / max(width, height)
             if width > height:  # then the height dimension is padded, the y coordinates should be divided by ratio
                 box[:, 1] = box[:, 1] / ratio
@@ -261,21 +250,15 @@ def add_text(history, text, image, threshold_slider, temporature_slider, interac
         for gd_id, gd_result in enumerate(gd_results_per_image):
             bboxes = gd_result.cpu().tolist()
             for bbox in bboxes:
-                # box = [int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])]
                 bbox = [int(bbox[0]*width), int(bbox[1]*height), int(bbox[2]*width), int(bbox[3]*height)]
                 cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), colors[gd_id][::-1], 2)
-                # print(f"Obj ID in Image: {gd_id}; Color: {colors[gd_id]}")
         path_save = get_image_name(prefix="grounding_img_")
         cv2.imwrite(path_save, image)
         return (path_save, )
     def post_process_masks(path_ori_image, mask_inter, path_gd_image, masks_gd, loc_inter, inter_type):
         def unresize_mask(mask, width, height):
-            # ori_size = max(width, height)
-            # ratio = ori_size / size
             import torch.nn.functional as F
             if width > height:  # then the height dimension is padded, the y coordinates should be divided by ratio
-                # box[:, 1] = box[:, 1] / ratio
-                # box[:, 3] = box[:, 3] / ratio
                 mask = F.interpolate((mask[None, ...]).float(), size=[width, width], mode="nearest")[0]
                 mask = mask[:, :height]
             elif width < height:  # then the height dimension is padded, the y coordinates should be divided by ratio
@@ -331,12 +314,11 @@ def add_text(history, text, image, threshold_slider, temporature_slider, interac
             returns.append(None)
         return returns
     def mask2point(mask, inter_type):
-        # mask = cv2.imread(path_mask)
         height, width = mask.shape[:2]
         ys, xs = np.where(mask[..., 0] == 255)
         if inter_type.lower() == "click":
-            loc_x = xs.mean()#  / mask.shape[1]
-            loc_y = ys.mean()#  / mask.shape[0]
+            loc_x = xs.mean()
+            loc_y = ys.mean()
             loc_x = loc_x / width
             loc_y = loc_y / height
             if height >= width:
@@ -345,10 +327,10 @@ def add_text(history, text, image, threshold_slider, temporature_slider, interac
                 loc_y = loc_y * (height/width)
             return torch.tensor([[loc_x, loc_y, 0.006, 0.006]])
         elif inter_type.lower() == "box":
-            loc_x_min = xs.min() / width #  / mask.shape[1]
-            loc_x_max = xs.max() / width #  / mask.shape[1]
-            loc_y_min = ys.min() / height #  / mask.shape[0]
-            loc_y_max = ys.max() / height #  / mask.shape[0]
+            loc_x_min = xs.min() / width
+            loc_x_max = xs.max() / width
+            loc_y_min = ys.min() / height
+            loc_y_max = ys.max() / height
             if height >= width:
                 loc_x_min = loc_x_min * (width/height)
                 loc_x_max = loc_x_max * (width/height)
@@ -363,7 +345,7 @@ def add_text(history, text, image, threshold_slider, temporature_slider, interac
     else:
         loc_inter = mask2point(image["mask"], interaction_selector)
         is_interactive = torch.isnan(loc_inter[0]).sum() == 0
-        if is_interactive:  # do not need this. you can judge if there is interaction through image["mask"]
+        if is_interactive:
             input_data_dict = our_chatbot.hitory2datadict(history, text)
             input_data_dict["points"] = loc_inter
             input_data_dict["mode_inter"] = interaction_selector
@@ -374,7 +356,6 @@ def add_text(history, text, image, threshold_slider, temporature_slider, interac
         input_data_dict["matching_threshold"] = threshold_slider
         input_data_dict["temporature"] = temporature_slider
         response_text, response_gd, response_mask, mask_inter  = our_chatbot.inference(input_data_dict)
-        # response = response[0]
     response_msks  = post_process_masks(history[1][0][0], mask_inter, history[1][0][0], response_mask, loc_inter, interaction_selector)
     if "<seg>" in response_text:
         response_gd = post_process_gd_response(response_msks[1][0], response_gd)
@@ -391,7 +372,6 @@ def add_image(history, image):
     print("LOG. Add Image Function is called.")
     path_input_img = get_image_name(prefix="tmp_input_img_")
     cv2.imwrite(path_input_img, image["image"][..., ::-1])
-    # cv2.imwrite("tmp_input_mask.jpg", image["mask"])  # clear the mask.
     if len(history) > 0:
         history = [(None, "A new image recieved, I will clear the history conversations.")]
     else:
@@ -406,7 +386,6 @@ def add_interaction_click(history, image, interaction_selector):
         history = history + [(None, "A more detailed box is specified, lets further talk about the region inside the box.")]
     elif interaction_selector.lower() == "click":
         history = history + [(None, "A more detailed click is specified, lets further talk about the region around the click.")]
-    # cv2.imwrite("tmp_input_mask.jpg", image["mask"])
     
     mask = image["mask"][..., :3] * np.array([234, 176, 113])
     image_rgb = image["image"][..., ::-1]
@@ -522,15 +501,13 @@ with gr.Blocks() as demo:
                 bubble_full_width=False,
                 height=598
                 # avatar_images=(None, (os.path.join(os.path.dirname(__file__), "avatar.png"))),
-            )  # the chatbot will provide a "history" stream of (input, output) tuples.
+            )
 
             with gr.Row():
-                # txt.render()
                 with gr.Column(scale=8):
                     txt.render()
                 with gr.Column(scale=1, min_width=60):
                     submit_btn = gr.Button(value="Send")
-                # btn = gr.UploadButton("📁", file_types=["image", "video", "audio"])
             #TODO: Enable these buttons.
             with gr.Row():
                 upvote_btn = gr.Button(value="👍  Upvote", interactive=True)
@@ -546,14 +523,6 @@ with gr.Blocks() as demo:
         chatbot, chatbot, 
         api_name="bot_text_response"
     )
-    # .then(
-    #     lambda: gr.Textbox(
-    #         interactive=True,
-    #         placeholder="Enter text and press enter, or upload an image. Append '(with grounding)' if you want do grounding.",
-    #     ), 
-    #     None, [txt], 
-    #     queue=False
-    # )
     submit_btn.click(fn=add_text, inputs=[chatbot, txt, img, threshold, temperature, interaction_selector], outputs=[chatbot, txt]).then(
         bot, 
         chatbot, chatbot, 
