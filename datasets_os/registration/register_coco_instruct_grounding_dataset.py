@@ -58,7 +58,11 @@ _PREDEFINED_SPLITS_COCO_PANOPTIC_CAPTION = {
         "coco/annotations/instances_train2017_instruct_grounding_fix_v2.json", # annot_root
         "/comp_robot/zhanghao/datasets/llava/instruct150k_brackets_out_1/merged_end_v2_fixed.json",
     ),
-
+    "coco_instruct_llava_bench": (
+        "coco/val2014", # image_root
+        "coco/annotations/instances_val2014.json", # annot_root
+        "/comp_robot/cv_public_dataset/coco/annotations/llava_bench_qa90_gpt4_conv_end.json",
+    ),
     "coco_interactive": (
         "coco/train2014", # image_root
         "coco/annotations/instances_train2014_filter.json", # annot_root

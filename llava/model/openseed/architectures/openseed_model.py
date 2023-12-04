@@ -691,6 +691,70 @@ class OpenSeeD(nn.Module):
         boxes = boxes * scale_fct
         return boxes
 
+    def forward_eval(self, batched_inputs, text_embeddings):
+        # import ipdb; ipdb.set_trace()
+        # print("Num images per batch:",len(batched_inputs['flickr']))
+        if self.training:
+            raise NotImplementedError
+        else:
+            self.criterion.conversation=False
+            box_results, seg_results = self.forward_inner_eval(
+                batched_inputs, 
+                task='seg',
+                default_text_embeddings=text_embeddings,
+            )
+            return box_results, seg_results
+
+    def forward_inner_eval(self, batched_inputs, task='seg',default_text_embeddings=None):
+        images = [x["image"].to(self.device) for x in batched_inputs]
+        images = [(x - self.pixel_mean) / self.pixel_std for x in images]
+        images = ImageList.from_tensors(images, self.size_divisibility)
+        matching_threshold = batched_inputs[0]["matching_threshold"] if "matching_threshold" in batched_inputs[0].keys() else None
+
+        features = self.backbone(images.tensor)
+        # features={k:v.to(torch.bfloat16) for k,v in features.items()}
+        # mask classification target
+        if "instances" in batched_inputs[0]:
+            gt_instances = [x["instances"].to(self.device) for x in batched_inputs]
+            targets = self.prepare_targets(gt_instances, images, task=task)
+        else:
+            targets = None
+        default_text_embeddings_ = [default_text_embeddings[0].float(), default_text_embeddings[1]]
+        outputs, mask_dict = self.sem_seg_head(features, targets=None, task=task,default_text_embeddings=default_text_embeddings_)
+        ##########eval training
+        pred_logits=outputs["pred_logits"]
+        pred_boxes=outputs["pred_boxes"]
+        pred_masks=outputs["pred_masks"]>0
+        # scale_factor=[1024./max(data['height'],data['width']) for data in batched_inputs]
+        matched_pred_boxes = []
+        matched_pred_masks = []
+        for i in range(len(pred_logits)):
+            if len(pred_logits) > 1:
+                raise NotImplementedError
+            num_grounding = pred_logits.shape[2]
+            for gd_idx in range(num_grounding):
+                if matching_threshold is None:
+                    matched_idx = torch.argmax(pred_logits[i, :, gd_idx],dim=0)
+                    matched_boxes = pred_boxes[i][matched_idx]
+                    matched_boxes = matched_boxes[None, :]
+                else:
+                    matched_idx = torch.where(pred_logits[i, :, gd_idx].softmax(dim=0) > matching_threshold)[0]
+                    # print(matched_idx, pred_logits[i, :, gd_idx].softmax(dim=0)[matched_idx])
+                    if matched_idx.shape[0] == 0:  #* if there is no one object satisfy threshold, then select the best matched one.
+                        matched_boxes = pred_boxes.new_zeros((1, 4))
+                        matched_masks = pred_boxes.new_zeros((1, 256, 256))
+                    else:
+                        matched_boxes = pred_boxes[i][matched_idx]
+                        matched_masks = pred_masks[i][matched_idx]
+                # matched_masks=pred_masks[i][matched_idx]
+                matched_boxes_processed = []
+                for lb in range(matched_boxes.shape[0]):
+                    pred_box=box_ops.box_cxcywh_to_xyxy(matched_boxes[lb][None])
+                    matched_boxes_processed.append(pred_box)
+                matched_pred_boxes.append(torch.cat(matched_boxes_processed, dim=0))
+                matched_pred_masks.append(matched_masks)
+        return matched_pred_boxes, matched_pred_masks
+    
 @register_model
 def get_segmentation_model(cfg, **kwargs):
     return OpenSeeD(cfg)
