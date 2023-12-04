@@ -29,7 +29,7 @@ pip install -e ".[train]"
 pip install flash-attn --no-build-isolation
 ```
 ### LLaVA-Grounding Weights
-Please check out our [Model Zoo](https://github.com/UX-Decoder/LLaVA-Grounding/docs/modelzoo.md) for all public LLaVA-Grounding checkpoints, and the instructions on how to use the weights.
+Please check out our [Model Zoo](https://github.com/UX-Decoder/LLaVA-Grounding/blob/main/docs/MODEL_ZOO.md) for all public LLaVA-Grounding checkpoints, and the instructions on how to use the weights.
 ### Demo
 After downloading model weights, simply conduct the following commends to run demo on your own machine.
 ```shell
