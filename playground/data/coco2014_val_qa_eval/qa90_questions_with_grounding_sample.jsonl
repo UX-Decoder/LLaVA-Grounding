@@ -1,0 +1,5 @@
+{"question_id": 0, "image": "000000441147.jpg", "text": "What is the color of the two suitcases in the image? (with grounding)", "category": "conv"}
+{"question_id": 1, "image": "000000441147.jpg", "text": "Analyze the image in a comprehensive and detailed manner. (with grounding)", "category": "detail"}
+{"question_id": 2, "image": "000000441147.jpg", "text": "What potential factors could make these suitcases valuable? (with grounding)", "category": "complex"}
+{"question_id": 3, "image": "000000353536.jpg", "text": "What are the main objects on the table in the image? (with grounding)", "category": "conv"}
+{"question_id": 4, "image": "000000353536.jpg", "text": "Describe the following image. (with grounding)", "category": "detail"}
