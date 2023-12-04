@@ -409,7 +409,7 @@ class SemanticSAM(nn.Module):
             "match_loss": dec_cfg.get('match_loss', True),
             "vis_out": os.path.join(cfg.get('OUTPUT_DIR', 'out'), str(cfg.get('VIS_OUT', 'vis'))),
             "coco_old": cfg.get("coco_old", True),
-            "points_per_side_eval": cfg.get("points_per_side_eval", 30),
+            # "points_per_side_eval": cfg.get("points_per_side_eval", 30),
             "clip_on": cfg.get("clip", False),
 
         }
@@ -418,8 +418,8 @@ class SemanticSAM(nn.Module):
     def device(self):
         return self.pixel_mean.device
 
-    def evaluate_demo(self, batched_inputs, mask_features=None,
-                      multi_scale_features=None):
+    def evaluate_demo(self, batched_inputs, all_whole=None, all_parts=None, mask_features=None,
+                      multi_scale_features=None, return_features=False):
         assert len(batched_inputs) == 1, "only support batch size equal to 1"
         prediction_switch = {'part': False, 'whole': False, 'seg': True, 'det': True}
         images = [x["image"].to(self.device) for x in batched_inputs]
@@ -446,6 +446,7 @@ class SemanticSAM(nn.Module):
             pred_ious = outputs["pred_ious"]
 
         _, index = pred_ious.view(-1, 3).max(1)
+        index = torch.zeros_like(index)
         obj_feats = outputs['obj_features'][0].view(-1, self.num_mask_tokens, 256)
         obj_feats = torch.gather(obj_feats, 1, index[..., None, None].repeat(1, 1, 256))[:, 0]
         mask_pred_results = outputs["pred_masks"]
@@ -459,7 +460,9 @@ class SemanticSAM(nn.Module):
         )
         mask_pred_results = mask_pred_results.view(-1, self.num_mask_tokens, images.tensor.shape[-2],
                                                    images.tensor.shape[-1])
-
+        mask_pred_results = torch.gather(mask_pred_results, 1,
+                                         index[..., None, None, None].repeat(1, 1, images.tensor.shape[-2],
+                                                                             images.tensor.shape[-1]))
         pred_masks = mask_pred_results[:, 0]
 
         image_size = images.image_sizes[0]
@@ -470,27 +473,28 @@ class SemanticSAM(nn.Module):
             pred_masks = retry_if_cuda_oom(sem_seg_postprocess)(
                 pred_masks, image_size, height, width
             )
-
-        return pred_masks, pred_ious, obj_feats
+        return pred_masks, pred_ious, self.obj_projector(obj_feats)
 
     def forward(self, batched_inputs, inference_task='seg',detach=False):
 
-        assert self.training:
-        obj_feats,inter_losses= self.forward_det_pretrain(batched_inputs)
-        for k in list(inter_losses.keys()):
-            if k in self.criterion.weight_dict:
-                inter_losses[k] *= self.criterion.weight_dict[k]
-                # losses[k] *= scale
+        if self.training:
+            obj_feats,inter_losses= self.forward_det_pretrain(batched_inputs)
+            for k in list(inter_losses.keys()):
+                if k in self.criterion.weight_dict:
+                    inter_losses[k] *= self.criterion.weight_dict[k]
+                    # losses[k] *= scale
+                else:
+                    # remove this loss if not specified in `weight_dict`
+                    inter_losses.pop(k)
+            new_losses = {}
+            for key, value in inter_losses.items():
+                new_losses['inter' + '.' + str(key)] = inter_losses[key]
+            if detach:
+                return [self.obj_projector(feat.detach()) for feat in obj_feats],new_losses
             else:
-                # remove this loss if not specified in `weight_dict`
-                inter_losses.pop(k)
-        new_losses = {}
-        for key, value in inter_losses.items():
-            new_losses['inter' + '.' + str(key)] = inter_losses[key]
-        if detach:
-            return [self.obj_projector(feat.detach()) for feat in obj_feats],new_losses
+                return [self.obj_projector(feat)[0] for feat in obj_feats],new_losses
         else:
-            return [self.obj_projector(feat)[0] for feat in obj_feats],new_losses
+            return self.evaluate_demo(batched_inputs)
 
     def forward_det_pretrain(self, batched_inputs, task='seg',
                              prediction_switch={'part': True, 'whole': True, 'seg': True, 'det': True}, dataname='coco',
@@ -508,6 +512,11 @@ class SemanticSAM(nn.Module):
                 0]
         prediction_switch = {'part': False, 'whole': False, 'seg': True, 'det': True}
 
+        # self.criterion.num_classes = len(train_class_names)
+        train_class_names_part = None
+        # if prediction_switch['part']:
+        #     train_class_names_part = self.train_class_names[dataname + '_part']
+        #     self.criterion.num_classes_part = len(train_class_names)
         if "instances" in batched_inputs[0]:
             gt_instances = [x["instances"].to(self.device) for x in batched_inputs]
             targets = self.prepare_targets_sam(gt_instances, images, prediction_switch=prediction_switch)
@@ -520,6 +529,7 @@ class SemanticSAM(nn.Module):
         if prediction_switch['part']:
             prediction_switch['part'] = False
 
+        # tgt_temp=[]
         obj_features_ls=[]
         losses_total=None
         num_masks=0

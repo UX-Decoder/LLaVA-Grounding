@@ -367,6 +367,106 @@ class LlavaLlamaForCausalLM_gd(LlamaForCausalLM, LlavaMetaForCausalLM_gd):
         )
         return model_inputs
 
+    def forward_eval(self, inputs):
+        collator=DataCollatorForSupervisedDataset()
+        llava_inputs=collator(inputs,tokenizer=inputs[0]['tokenizer'])
+        llava_inputs['seg_inputs']=inputs
+        return self.forward_inner_eval(**llava_inputs)
+
+    def forward_inner_eval(
+        self,
+        input_ids: torch.LongTensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        past_key_values: Optional[List[torch.FloatTensor]] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        labels: Optional[torch.LongTensor] = None,
+        use_cache: Optional[bool] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        images: Optional[torch.FloatTensor] = None,
+        seg_inputs: Optional[torch.FloatTensor] = None,
+        return_dict: Optional[bool] = None,
+    ) -> Union[Tuple, CausalLMOutputWithPast]:
+        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        )
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        _, attention_mask, past_key_values, inputs_embeds, labels = self.prepare_inputs_labels_for_multimodal(input_ids, attention_mask, past_key_values, labels, images)
+
+        output_ids, seg_hidden_states = self.auto_regressive_generate(attention_mask, past_key_values, inputs_embeds, output_attentions, seg_inputs[0]["tokenizer"], return_dict)
+        output_text = seg_inputs[0]["tokenizer"].batch_decode([output_ids], skip_special_tokens=True)[0]
+        if len(seg_hidden_states)==0:
+            return output_text, [], []
+        seg_tokens = torch.cat(seg_hidden_states, dim=1)
+        padded_mask = seg_tokens.new_ones(seg_tokens.shape[:2]) > 0
+        predicted_boxes, predicted_masks=self.seg_model.model.forward_eval(seg_inputs, (seg_tokens,padded_mask))
+
+        return output_text, predicted_boxes, predicted_masks
+    
+    def auto_regressive_generate(self, 
+                        attention_mask,
+                        past_key_values,
+                        inputs_embeds,
+                        output_attentions,
+                        tokenizer,
+                        return_dict,
+                        temporature=0.0
+        ):
+        ########
+        # llm_inputs['obj_num'] = False
+        seg_token = tokenizer.encode("<seg>")[1]
+        seg_token_list = []
+        output_ids = []
+        output_logits = []
+        length = inputs_embeds.shape[1]
+        for i in range(1000):
+            # import pdb;pdb.set_trace()
+            if i == 0:
+                results = self.model(
+                    input_ids=None,
+                    past_key_values=past_key_values,
+                    inputs_embeds=inputs_embeds,
+                    use_cache=True,
+                    output_attentions=output_attentions,
+                    output_hidden_states=True,
+                    return_dict=return_dict
+                )
+            else:
+                attention_mask = cur_hidden.new_ones(
+                    1, past_key_values[0][0].shape[-2] + 1, device="cuda")
+                # print("Attention mask shape: ", attention_mask.shape)
+                results = self.model(
+                    input_ids=torch.as_tensor([[cur_id]], device=inputs_embeds.device),
+                    attention_mask=attention_mask,
+                    past_key_values=past_key_values,
+                    # inputs_embeds=cur_hidden,
+                    use_cache=True,
+                    output_attentions=output_attentions,
+                    output_hidden_states=True,
+                    return_dict=return_dict
+                )
+            cur_hidden = results.hidden_states[-1][:, -1:]  # last layer last token
+            logits = self.lm_head(results[0])
+            cur_logits = logits[0][-1]
+            cur_id = int(torch.argmax(cur_logits))
+            if temporature < 1e-4:
+                cur_id = int(torch.argmax(cur_logits))
+            else:
+                probs = torch.softmax(cur_logits / temporature, dim=-1)
+                cur_id = int(torch.multinomial(probs, num_samples=1))
+                            
+            past_key_values = results.past_key_values
+            length += 1
+
+            if cur_id==seg_token:
+                seg_token_list.append(cur_hidden)
+            output_ids.append(cur_id)
+            output_logits.append(cur_logits)
+            if tokenizer.decode(output_ids).find("</s>")!=-1:
+                break
+        return output_ids,seg_token_list
+    
 class LlavaLlamaForCausalLM_joint(LlavaLlamaForCausalLM_gd):
     def forward(self,**batched_inputs):
         # print(kwargs.keys())
@@ -706,8 +806,6 @@ class LlavaLlamaForCausalLM_joint_2st_it_only_ref_instr(LlamaForCausalLM, LlavaM
             output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
         )
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-
-
         obj_feats,inter_losses=self.interactive_model.float().forward(seg_inputs['interactive'],detach=False)
         obj_feats=[obj_feats[i][seg_inputs['interactive'][i]['grounding_index']][None] for i in range(len(obj_feats))]
         num_it=len(seg_inputs['interactive'])
@@ -769,29 +867,166 @@ class LlavaLlamaForCausalLM_joint_2st_it_only_ref_instr(LlamaForCausalLM, LlavaM
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )
-
-    def prepare_inputs_for_generation(
-        self, input_ids, past_key_values=None, attention_mask=None, inputs_embeds=None, **kwargs
-    ):
-        if past_key_values:
-            input_ids = input_ids[:, -1:]
-
-        # if `inputs_embeds` are passed, we only want to use them in the 1st generation step
-        if inputs_embeds is not None and past_key_values is None:
-            model_inputs = {"inputs_embeds": inputs_embeds}
+    def forward_eval(self, batched_inputs):
+        if not (batched_inputs[0]["points"] is None):
+            print("Get Interactive Data.")
+            collator=DataCollatorForSupervisedDataset()
+            llava_inputs=collator(batched_inputs,tokenizer=batched_inputs[0]['tokenizer'])
+            llava_inputs['seg_inputs']=batched_inputs
+            if "temporature" in batched_inputs[0].keys():
+                llava_inputs["temporature"] = batched_inputs[0]["temporature"]
+            else:
+                llava_inputs["temporature"] = 0
+            return self.forward_inner_eval_interactive(**llava_inputs)
         else:
-            model_inputs = {"input_ids": input_ids}
-
-        model_inputs.update(
-            {
-                "past_key_values": past_key_values,
-                "use_cache": kwargs.get("use_cache"),
-                "attention_mask": attention_mask,
-                "images": kwargs.get("images", None),
-            }
+            print("Do not Get Interactive Data.")
+            collator=DataCollatorForSupervisedDataset()
+            llava_inputs=collator(batched_inputs,tokenizer=batched_inputs[0]['tokenizer'])
+            llava_inputs['seg_inputs']=batched_inputs
+            if "temporature" in batched_inputs[0].keys():
+                llava_inputs["temporature"] = batched_inputs[0]["temporature"]
+            else:
+                llava_inputs["temporature"] = 0
+            return self.forward_inner_eval(**llava_inputs)
+    def forward_inner_eval(
+        self,
+        input_ids: torch.LongTensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        past_key_values: Optional[List[torch.FloatTensor]] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        labels: Optional[torch.LongTensor] = None,
+        use_cache: Optional[bool] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        images: Optional[torch.FloatTensor] = None,
+        seg_inputs: Optional[torch.FloatTensor] = None,
+        return_dict: Optional[bool] = None,
+        temporature=0
+    ) -> Union[Tuple, CausalLMOutputWithPast]:
+        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
         )
-        return model_inputs
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        _, attention_mask, past_key_values, inputs_embeds, labels = self.prepare_inputs_labels_for_multimodal_NoInter(input_ids, attention_mask, past_key_values, labels, images)
 
+        output_ids, seg_hidden_states = self.auto_regressive_generate(attention_mask, past_key_values, inputs_embeds, output_attentions, seg_inputs[0]["tokenizer"], return_dict, temporature)
+        output_text = seg_inputs[0]["tokenizer"].batch_decode([output_ids], skip_special_tokens=True)[0]
+        if len(seg_hidden_states)==0:
+            return output_text, [], [], None
+        seg_tokens = torch.cat(seg_hidden_states, dim=1)
+        padded_mask = seg_tokens.new_ones(seg_tokens.shape[:2]) > 0
+        predicted_boxes, predicted_masks=self.seg_model.model.forward_eval(seg_inputs, (seg_tokens,padded_mask))
+
+        return output_text, predicted_boxes, predicted_masks, None
+    def forward_inner_eval_interactive(
+        self,
+        input_ids: torch.LongTensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        past_key_values: Optional[List[torch.FloatTensor]] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        labels: Optional[torch.LongTensor] = None,
+        use_cache: Optional[bool] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        images: Optional[torch.FloatTensor] = None,
+        seg_inputs: Optional[torch.FloatTensor] = None,
+        return_dict: Optional[bool] = None,
+        temporature=0
+    ) -> Union[Tuple, CausalLMOutputWithPast]:
+        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        )
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        #! extra interaction part
+        boxes = seg_inputs[0]['points']
+        seg_inputs[0]['targets'] = [dict()]
+        seg_inputs[0]['targets'][0]['points'] = boxes
+        if seg_inputs[0]['mode_inter'].lower() == "click":
+            seg_inputs[0]['targets'][0]['pb'] = boxes.new_tensor([0.0])
+        elif seg_inputs[0]['mode_inter'].lower() == "box":
+            seg_inputs[0]['targets'][0]['pb'] = boxes.new_tensor([1.0])
+
+        seg_inputs[0]['targets'][0]['is_part'] = [0]
+        inter_masks, _, obj_feats =self.interactive_model.forward(seg_inputs)
+        num_it=len(seg_inputs)
+        #
+        _, attention_mask, past_key_values, inputs_embeds, labels = self.prepare_inputs_labels_for_multimodal(input_ids, attention_mask, past_key_values, labels, images, obj_feats=obj_feats,num_it=num_it)
+        
+        output_ids, seg_hidden_states = self.auto_regressive_generate(attention_mask, past_key_values, inputs_embeds, output_attentions, seg_inputs[0]["tokenizer"], return_dict, temporature)
+        
+        output_text = seg_inputs[0]["tokenizer"].batch_decode([output_ids], skip_special_tokens=True)
+        if len(seg_hidden_states)==0:
+            return output_text[0], [], None, inter_masks
+        seg_tokens = torch.cat(seg_hidden_states, dim=1)
+        padded_mask = seg_tokens.new_ones(seg_tokens.shape[:2]) > 0
+        predicted_boxes, predicted_masks=self.seg_model.model.forward_eval(seg_inputs, (seg_tokens,padded_mask))
+
+        return output_text[0], predicted_boxes, predicted_masks, inter_masks
+    def auto_regressive_generate(self, 
+                        attention_mask,
+                        past_key_values,
+                        inputs_embeds,
+                        output_attentions,
+                        tokenizer,
+                        return_dict,
+                        temporature=0.0
+        ):
+        ########
+        # llm_inputs['obj_num'] = False
+        seg_token = tokenizer.encode("<seg>")[1]
+        seg_token_list = []
+        output_ids = []
+        output_logits = []
+        length = inputs_embeds.shape[1]
+        for i in range(1000):
+            # import pdb;pdb.set_trace()
+            if i == 0:
+                results = self.model(
+                    input_ids=None,
+                    past_key_values=past_key_values,
+                    inputs_embeds=inputs_embeds,
+                    use_cache=True,
+                    output_attentions=output_attentions,
+                    output_hidden_states=True,
+                    return_dict=return_dict
+                )
+            else:
+                attention_mask = cur_hidden.new_ones(
+                    1, past_key_values[0][0].shape[-2] + 1, device="cuda")
+                # print("Attention mask shape: ", attention_mask.shape)
+                results = self.model(
+                    input_ids=torch.as_tensor([[cur_id]], device=inputs_embeds.device),
+                    attention_mask=attention_mask,
+                    past_key_values=past_key_values,
+                    # inputs_embeds=cur_hidden,
+                    use_cache=True,
+                    output_attentions=output_attentions,
+                    output_hidden_states=True,
+                    return_dict=return_dict
+                )
+            cur_hidden = results.hidden_states[-1][:, -1:]  # last layer last token
+            logits = self.lm_head(results[0])
+            cur_logits = logits[0][-1]
+            cur_id = int(torch.argmax(cur_logits))
+            if temporature < 1e-4:
+                cur_id = int(torch.argmax(cur_logits))
+            else:
+                probs = torch.softmax(cur_logits / temporature, dim=-1)
+                cur_id = int(torch.multinomial(probs, num_samples=1))
+                            
+            past_key_values = results.past_key_values
+            length += 1
+
+            if cur_id==seg_token:
+                seg_token_list.append(cur_hidden)
+            output_ids.append(cur_id)
+            output_logits.append(cur_logits)
+            if tokenizer.decode(output_ids).find("</s>")!=-1:
+                break
+        return output_ids,seg_token_list
+   
 AutoConfig.register("llava", LlavaConfig)
 AutoModelForCausalLM.register(LlavaConfig, LlavaLlamaForCausalLM)
 AutoModelForCausalLM.register(LlavaConfig, LlavaLlamaForCausalLM_gd)

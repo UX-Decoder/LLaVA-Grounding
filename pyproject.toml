@@ -13,7 +13,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
 ]
 dependencies = [
-    "einops", "fastapi", "gradio==3.35.2", "markdown2[all]", "numpy",
+    "einops", "fastapi", "gradio==3.39.0", "markdown2[all]", "numpy",
     "requests", "sentencepiece", "tokenizers>=0.12.1",
     "torch", "torchvision", "uvicorn", "wandb",
     "shortuuid", "httpx==0.24.0",
@@ -25,7 +25,7 @@ dependencies = [
     "scikit-learn==1.2.2",
     "sentencepiece==0.1.99",
     "einops==0.6.1", "einops-exts==0.0.4", "timm==0.6.13",
-    "gradio_client==0.2.9"
+    "gradio_client==0.7.0"
 ]
 
 [project.urls]
