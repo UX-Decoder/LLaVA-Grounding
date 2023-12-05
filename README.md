@@ -1,4 +1,4 @@
-LLaVA-Grounding: Grounded Visual Chat with Large Multimodal Models
+🌋 LLaVA-Grounding: Grounded Visual Chat with Large Multimodal Models
 ========
 
 [[Project Page](https://llava-vl.github.io/llava-grounding)] [[Arxiv](https://arxiv.org/abs/2311.xxxx)]  [[Demo](https://llava-grounding.xyzou.net:6084)]  [[Model Zoo](https://github.com/UX-Decoder/LLaVA-Grounding/blob/main/docs/MODEL_ZOO.md)] 
@@ -9,6 +9,12 @@ LLaVA-Grounding: Grounded Visual Chat with Large Multimodal Models
 
 
 ## Contents
+- [Install](#install)
+- [LLaVA-Grounding Weights](#llava-grounding-weights)
+- [Demo](#demo)
+- [Model Zoo](docs/MODEL_ZOO.md)
+- [Evaluation](#evaluation)
+
 ### Install
 1. Clone this repository and navigate to LLaVA-Grounding fold:
 ```shell
