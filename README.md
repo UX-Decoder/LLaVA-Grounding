@@ -1,11 +1,11 @@
 LLaVA-Grounding: Grounded Visual Chat with Large Multimodal Models
 ========
 
-
+[[Project Page](https://llava-vl.github.io/llava-grounding)] [[Arxiv](https://arxiv.org/abs/2311.xxxx)]  [[Demo](https://llava-grounding.xyzou.net:6084)]  [[Model Zoo](https://github.com/UX-Decoder/LLaVA-Grounding/blob/main/docs/MODEL_ZOO.md)] 
 <!-- [[`Paper`](xxx)] [[`BibTex`](#black_nib-citation)] -->
 
 ## :fire: News
-[2023/12/5] Our paper is available in arxiv.
+[2023/12/6] Our paper is available in arxiv.
 
 
 ## Contents
@@ -28,6 +28,8 @@ pip install -e .
 pip install -e ".[train]"
 pip install flash-attn --no-build-isolation
 ```
+4. Install packages necessary for [OpenSeeD](https://github.com/IDEA-Research/OpenSeeD) and [Semantic-SAM](https://github.com/UX-Decoder/Semantic-SAM).
+
 ### LLaVA-Grounding Weights
 Please check out our [Model Zoo](https://github.com/UX-Decoder/LLaVA-Grounding/blob/main/docs/MODEL_ZOO.md) for all public LLaVA-Grounding checkpoints, and the instructions on how to use the weights.
 ### Demo
