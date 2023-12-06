@@ -22,4 +22,4 @@ vis_results_pdf_recall
 
 *.log
 *.json
-gradio_demo/examples/demo_usage.mp4
+gradio_demo/examples/*.mp4

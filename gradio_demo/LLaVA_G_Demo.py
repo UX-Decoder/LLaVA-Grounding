@@ -429,7 +429,7 @@ with gr.Blocks() as demo:
     # Informations
     title_markdown = ("""
         # LLaVA-Grounding: Grounded Visual Chat with Large Multimodal Models
-        [[Project Page]](https://llava-vl.github.io/llava-grounding/) [[Paper]](todo) [[Code]](https://github.com/UX-Decoder/LLaVA-Grounding) [[Model]](https://huggingface.co/Haozhangcx/llava_grounding_gd_vp)
+        [[Project Page](https://llava-vl.github.io/llava-grounding)] [[Arxiv](https://arxiv.org/abs/2312.02949)]  [[Demo](http://llava-grounding.xyzou.net:6084)]  [[Model](https://huggingface.co/Haozhangcx/llava_grounding_gd_vp)] 
     """)
     tips_markdown = ("""
     **Tips for better results**
@@ -521,10 +521,19 @@ with gr.Blocks() as demo:
             gr.Markdown(tips_markdown)
             gr.Markdown(tos_markdown)
             gr.Markdown(learn_more_markdown)
-    if os.path.isfile("gradio_demo/examples/demo_usage.mp4"):  # only online demo
+    if os.path.isfile("gradio_demo/examples/demo_grounding.mp4"):  # only online demo
         gr.Markdown("-----------------------------------")
         gr.Markdown("## User's Guidance")
-        gr.Video(value="gradio_demo/examples/demo_usage.mp4")
+        with gr.Row():
+            with gr.Column():
+                gr.Markdown("### Grounded Visual Chat")
+                gr.Video(value="gradio_demo/examples/demo_grounding.mp4")
+            with gr.Column():
+                gr.Markdown("### Visual Prompt (Click)")
+                gr.Video(value="gradio_demo/examples/demo_inter_click.mp4")
+            with gr.Column():
+                gr.Markdown("### Visual Prompt (Box)")
+                gr.Video(value="gradio_demo/examples/demo_inter_box.mp4")
     txt.submit(add_text, [chatbot, txt, img, threshold, temperature, interaction_selector], [chatbot, txt], queue=False).then(
         bot, 
         chatbot, chatbot, 
