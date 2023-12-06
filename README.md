@@ -47,3 +47,22 @@ CUDA_VISIBLE_DEVICES=0 python gradio_demo/LLaVA_G_Demo.py --path_vision_cfg conf
 ```
 
 Please refer to our [Online Demo](http://llava-grounding.xyzou.net:6084) for the more detailed user's guidence.
+
+### Citation
+If you find LLaVA-Grounding useful for your research and applications, please cite using this BibTeX:
+```bibtex
+
+@misc{zhang2023llavagrounding,
+title={LLaVA-Grounding: Grounded Visual Chat with Large Multimodal Models},
+author={Hao Zhang and Hongyang Li and Feng Li and Tianhe Ren and Xueyan Zou and Shilong Liu and Shijia Huang and Jianfeng Gao and Lei Zhang and Chunyuan Li and Jianwei Yang},
+year={2023},
+booktitle={arXiv}
+}
+
+@misc{liu2023llava,
+      title={Visual Instruction Tuning}, 
+      author={Liu, Haotian and Li, Chunyuan and Wu, Qingyang and Lee, Yong Jae},
+      publisher={arXiv:2304.08485},
+      year={2023}
+}
+```
