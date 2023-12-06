@@ -13,7 +13,6 @@
 - [LLaVA-Grounding Weights](#llava-grounding-weights)
 - [Demo](#demo)
 - [Model Zoo](docs/MODEL_ZOO.md)
-- [Evaluation](#evaluation)
 
 ### Install
 1. Clone this repository and navigate to LLaVA-Grounding fold:
