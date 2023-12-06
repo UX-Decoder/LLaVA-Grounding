@@ -46,4 +46,4 @@ CUDA_VISIBLE_DEVICES=0 python gradio_demo/LLaVA_G_Demo.py --path_vision_cfg path
 CUDA_VISIBLE_DEVICES=0 python gradio_demo/LLaVA_G_Demo.py --path_vision_cfg configs/openseed/openseed_swint_lang_joint_2st_v2_data_end_with_interaction.yaml --path_inter_cfg configs/semsam/idino_swint_1_part_data_llm_ref_feat_all_16_det_pretrainv1.yaml --model_path checkpoints/llava_grounding
 ```
 
-Please refer to our [Online Demo](https://llava-grounding.xyzou.net:6084) for the more detailed user's guidence.
+Please refer to our [Online Demo](http://llava-grounding.xyzou.net:6084) for the more detailed user's guidence.
