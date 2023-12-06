@@ -1,7 +1,7 @@
 🌋 LLaVA-Grounding: Grounded Visual Chat with Large Multimodal Models
 ========
 
-[[Project Page](https://llava-vl.github.io/llava-grounding)] [[Arxiv](https://arxiv.org/abs/2311.xxxx)]  [[Demo](https://llava-grounding.xyzou.net:6084)]  [[Model Zoo](https://github.com/UX-Decoder/LLaVA-Grounding/blob/main/docs/MODEL_ZOO.md)] 
+[[Project Page](https://llava-vl.github.io/llava-grounding)] [[Arxiv](https://arxiv.org/abs/2312.02949)]  [[Demo](http://llava-grounding.xyzou.net:6084)]  [[Model Zoo](https://github.com/UX-Decoder/LLaVA-Grounding/blob/main/docs/MODEL_ZOO.md)] 
 <!-- [[`Paper`](xxx)] [[`BibTex`](#black_nib-citation)] -->
 
 ## :fire: News
