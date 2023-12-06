@@ -1,1 +1,0 @@
-llava_tools/run_scripts_hao_eval_llava_inw.sh
