@@ -53,10 +53,10 @@ If you find LLaVA-Grounding useful for your research and applications, please ci
 ```bibtex
 
 @misc{zhang2023llavagrounding,
-title={LLaVA-Grounding: Grounded Visual Chat with Large Multimodal Models},
-author={Hao Zhang and Hongyang Li and Feng Li and Tianhe Ren and Xueyan Zou and Shilong Liu and Shijia Huang and Jianfeng Gao and Lei Zhang and Chunyuan Li and Jianwei Yang},
-year={2023},
-booktitle={arXiv}
+      title={LLaVA-Grounding: Grounded Visual Chat with Large Multimodal Models},
+      author={Hao Zhang and Hongyang Li and Feng Li and Tianhe Ren and Xueyan Zou and Shilong Liu and Shijia Huang and Jianfeng Gao and Lei Zhang and Chunyuan Li and Jianwei Yang},
+      year={2023},
+      booktitle={arXiv}
 }
 
 @misc{liu2023llava,
