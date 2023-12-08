@@ -1,7 +1,8 @@
 🌋 LLaVA-Grounding: Grounded Visual Chat with Large Multimodal Models
 ========
 
-[[Project Page](https://llava-vl.github.io/llava-grounding)] [[Arxiv](https://arxiv.org/abs/2312.02949)]  [[Demo](http://llava-grounding.xyzou.net:6084)]  [[Model Zoo](https://github.com/UX-Decoder/LLaVA-Grounding/blob/main/docs/MODEL_ZOO.md)] 
+[[Project Page](https://llava-vl.github.io/llava-grounding)] [[Arxiv](https://arxiv.org/abs/2312.02949)]  [[Demo](https://llava-grounding.deepdataspace.com/
+)]  [[Model Zoo](https://github.com/UX-Decoder/LLaVA-Grounding/blob/main/docs/MODEL_ZOO.md)] 
 <!-- [[`Paper`](xxx)] [[`BibTex`](#black_nib-citation)] -->
 
 ## :fire: News
@@ -46,7 +47,7 @@ CUDA_VISIBLE_DEVICES=0 python gradio_demo/LLaVA_G_Demo.py --path_vision_cfg path
 CUDA_VISIBLE_DEVICES=0 python gradio_demo/LLaVA_G_Demo.py --path_vision_cfg configs/openseed/openseed_swint_lang_joint_2st_v2_data_end_with_interaction.yaml --path_inter_cfg configs/semsam/idino_swint_1_part_data_llm_ref_feat_all_16_det_pretrainv1.yaml --model_path checkpoints/llava_grounding
 ```
 
-Please refer to our [Online Demo](http://llava-grounding.xyzou.net:6084) for the more detailed user's guidence.
+Please refer to our [Online Demo](https://llava-grounding.deepdataspace.com/) for the more detailed user's guidence.
 
 ### Citation
 If you find LLaVA-Grounding useful for your research and applications, please cite using this BibTeX:
