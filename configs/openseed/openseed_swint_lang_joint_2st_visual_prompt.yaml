@@ -10,6 +10,7 @@
 ##################
 WEIGHT: ''
 PORT: 53711
+detach_seg: False
 VERBOSE: true
 #OUTPUT_DIR: '../../data/output/test'
 inference_only: true
@@ -80,6 +81,7 @@ MODEL:
     TRANSFORMER_IN_FEATURE: "multi_scale_pixel_decoder"
     MASK: True
     BOX: True
+    COCO_ONLY: True
     GROUNDING:
       ENABLED: False
       MAX_LEN: 5
@@ -109,6 +111,8 @@ MODEL:
     DICE_WEIGHT: 5.0
     BOX_WEIGHT: 5.0
     GIOU_WEIGHT: 2.0
+    LLM_WEIGHT: 1.0
+    WEIGHT_MULTIPLIER: 1.0
     COST_CLASS_WEIGHT: 4.0
     COST_DICE_WEIGHT: 5.0
     COST_MASK_WEIGHT: 5.0
@@ -229,7 +233,7 @@ COCO:
     SHUFFLE: true
   DATALOADER:
     FILTER_EMPTY_ANNOTATIONS: False
-    NUM_WORKERS: 16
+    NUM_WORKERS:  4
     LOAD_PROPOSALS: False
     SAMPLER_TRAIN: "TrainingSampler"
     ASPECT_RATIO_GROUPING: True
@@ -252,7 +256,7 @@ VLP:
     BATCH_SIZE_TOTAL: 256
   DATALOADER:
     FILTER_EMPTY_ANNOTATIONS: False
-    NUM_WORKERS: 16
+    NUM_WORKERS:  4
     LOAD_PROPOSALS: False
     SAMPLER_TRAIN: "TrainingSampler"
     ASPECT_RATIO_GROUPING: True
@@ -262,17 +266,11 @@ INPUT:
   PIXEL_STD: [58.395, 57.120, 57.375]
 
 DATASETS:
-  TRAIN: ["flickr_train","coco_2017_train_panoptic_ref_full_with_sem_seg_caption_grounding"]
-
-  TEST: ["flickr_val"]
-
-  CLASS_CONCAT: false
-  SIZE_DIVISIBILITY: 32
-  PROPOSAL_FILES_TRAIN: []
+  TRAIN: ["coco_interactive_refcoco","coco_interactive","flickr_train"]
 
 DATALOADER:
   FILTER_EMPTY_ANNOTATIONS: False
-  NUM_WORKERS: 16
+  NUM_WORKERS:  4
   LOAD_PROPOSALS: False
   SAMPLER_TRAIN: "TrainingSampler"
   ASPECT_RATIO_GROUPING: True
@@ -348,7 +346,7 @@ ADE20K:
       ENABLED: False
   DATALOADER:
     FILTER_EMPTY_ANNOTATIONS: False
-    NUM_WORKERS: 16
+    NUM_WORKERS:  4
     LOAD_PROPOSALS: False
     SAMPLER_TRAIN: "TrainingSampler"
     ASPECT_RATIO_GROUPING: True
@@ -362,7 +360,7 @@ REF:
     FORMAT: "RGB"
   DATALOADER:
     FILTER_EMPTY_ANNOTATIONS: False
-    NUM_WORKERS: 16
+    NUM_WORKERS:  4
     LOAD_PROPOSALS: False
     SAMPLER_TRAIN: "TrainingSampler"
     ASPECT_RATIO_GROUPING: False
@@ -377,7 +375,7 @@ SUN:
     MAX_SIZE_TEST: 1024
   DATALOADER:
     FILTER_EMPTY_ANNOTATIONS: False
-    NUM_WORKERS: 16
+    NUM_WORKERS:  4
     LOAD_PROPOSALS: False
     SAMPLER_TRAIN: "TrainingSampler"
     ASPECT_RATIO_GROUPING: False
@@ -392,7 +390,7 @@ SCAN:
     MAX_SIZE_TEST: 1024
   DATALOADER:
     FILTER_EMPTY_ANNOTATIONS: False
-    NUM_WORKERS: 16
+    NUM_WORKERS:  4
     LOAD_PROPOSALS: False
     SAMPLER_TRAIN: "TrainingSampler"
     ASPECT_RATIO_GROUPING: False
@@ -407,7 +405,7 @@ BDD:
     MAX_SIZE_TEST: 1333
   DATALOADER:
     FILTER_EMPTY_ANNOTATIONS: False
-    NUM_WORKERS: 16
+    NUM_WORKERS:  4
     LOAD_PROPOSALS: False
     SAMPLER_TRAIN: "TrainingSampler"
     ASPECT_RATIO_GROUPING: False
@@ -442,7 +440,7 @@ CITY:
         FLIP: True
     DATALOADER:
       FILTER_EMPTY_ANNOTATIONS: True
-      NUM_WORKERS: 16
+      NUM_WORKERS:  4
       LOAD_PROPOSALS: False
       SAMPLER_TRAIN: "TrainingSampler"
       ASPECT_RATIO_GROUPING: True
@@ -489,7 +487,7 @@ PSACAL_PART:
     SHUFFLE: true
   DATALOADER:
     FILTER_EMPTY_ANNOTATIONS: False
-    NUM_WORKERS: 16
+    NUM_WORKERS:  4
     LOAD_PROPOSALS: False
     SAMPLER_TRAIN: "TrainingSampler"
     ASPECT_RATIO_GROUPING: True
@@ -525,7 +523,7 @@ llava:
     SHUFFLE: true
   DATALOADER:
     FILTER_EMPTY_ANNOTATIONS: False
-    NUM_WORKERS: 16
+    NUM_WORKERS:  4
     LOAD_PROPOSALS: False
     SAMPLER_TRAIN: "TrainingSampler"
     ASPECT_RATIO_GROUPING: True
@@ -561,10 +559,83 @@ flickr:
     SHUFFLE: true
   DATALOADER:
     FILTER_EMPTY_ANNOTATIONS: False
-    NUM_WORKERS: 16
+    NUM_WORKERS:  4
     LOAD_PROPOSALS: False
     SAMPLER_TRAIN: "TrainingSampler"
     ASPECT_RATIO_GROUPING: True
+
+coco_instruct:
+  INPUT:
+    MIN_SIZE_TEST: 800
+    MAX_SIZE_TEST: 1333
+    IMAGE_SIZE: 1024
+    MIN_SCALE: 1.0
+    MAX_SCALE: 1.0
+    DATASET_MAPPER_NAME: "coco_instruct"
+    IGNORE_VALUE: 255
+    COLOR_AUG_SSD: False
+    SIZE_DIVISIBILITY: 32
+    RANDOM_FLIP: "horizontal"
+    MASK_FORMAT: "polygon"
+    FORMAT: "RGB"
+    CROP:
+      ENABLED: True
+  TEST:
+    DETECTIONS_PER_IMAGE: 100
+    NAME: coco_eval
+    IOU_TYPE: ['bbox', 'segm']
+    USE_MULTISCALE: false
+    BATCH_SIZE_TOTAL: 1
+    MODEL_FILE: ''
+    AUG:
+      ENABLED: False
+  TRAIN:
+    BATCH_SIZE_TOTAL: 1
+    BATCH_SIZE_PER_GPU: 1
+    SHUFFLE: true
+  DATALOADER:
+    FILTER_EMPTY_ANNOTATIONS: False
+    NUM_WORKERS:  4
+    LOAD_PROPOSALS: False
+    SAMPLER_TRAIN: "TrainingSampler"
+    ASPECT_RATIO_GROUPING: True
+
+coco_interactive:
+  INPUT:
+    MIN_SIZE_TEST: 800
+    MAX_SIZE_TEST: 1333
+    IMAGE_SIZE: 1024
+    MIN_SCALE: 1.0
+    MAX_SCALE: 1.0
+    DATASET_MAPPER_NAME: "coco_interactive"
+    IGNORE_VALUE: 255
+    COLOR_AUG_SSD: False
+    SIZE_DIVISIBILITY: 32
+    RANDOM_FLIP: "horizontal"
+    MASK_FORMAT: "polygon"
+    FORMAT: "RGB"
+    CROP:
+      ENABLED: True
+  TEST:
+    DETECTIONS_PER_IMAGE: 100
+    NAME: coco_eval
+    IOU_TYPE: ['bbox', 'segm']
+    USE_MULTISCALE: false
+    BATCH_SIZE_TOTAL: 1
+    MODEL_FILE: ''
+    AUG:
+      ENABLED: False
+  TRAIN:
+    BATCH_SIZE_TOTAL: 1
+    BATCH_SIZE_PER_GPU: 1
+    SHUFFLE: true
+  DATALOADER:
+    FILTER_EMPTY_ANNOTATIONS: False
+    NUM_WORKERS:  4
+    LOAD_PROPOSALS: False
+    SAMPLER_TRAIN: "TrainingSampler"
+    ASPECT_RATIO_GROUPING: True
+
 
 vg:
   INPUT:
@@ -597,7 +668,7 @@ vg:
     SHUFFLE: true
   DATALOADER:
     FILTER_EMPTY_ANNOTATIONS: False
-    NUM_WORKERS: 16
+    NUM_WORKERS:  4
     LOAD_PROPOSALS: False
     SAMPLER_TRAIN: "TrainingSampler"
     ASPECT_RATIO_GROUPING: True

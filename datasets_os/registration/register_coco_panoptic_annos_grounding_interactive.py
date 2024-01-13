@@ -11,56 +11,15 @@ from detectron2.utils.file_io import PathManager
 
 _PREDEFINED_SPLITS_COCO_PANOPTIC_CAPTION = {
 
-    "coco_2017_train_panoptic_filtrefgumdval": (
-        # This is the original panoptic annotation directory
-        "coco/panoptic_train2017",
-        "coco/annotations/panoptic_train2017_filtrefgumdval.json",
-        "coco/panoptic_semseg_train2017",
-        "coco/annotations/grounding_train2017_filtrefgumd.json",
-        "coco/annotations/caption_class_similarity.pth"
-    ),
+
     "coco_2017_train_panoptic_ref_full": (
         # This is the original panoptic annotation directory
         "coco/panoptic_train2017",
-        # "coco/annotations/panoptic_train2017_filtered_ref.json",
         "coco/annotations/panoptic_train2017_filter.json",
         "coco/panoptic_semseg_train2017",
         "coco/annotations/grounding_train2017.json",
-        "coco/annotations/caption_class_similarity.pth"
     ),
-    "coco_2017_train_panoptic_ref_only": (
-        # This is the original panoptic annotation directory
-        "coco/panoptic_train2017",
-        "coco/annotations/panoptic_train2017_refonly_filtered.json",
-        # "coco/annotations/panoptic_train2017_refonly.json",
-        "coco/panoptic_semseg_train2017",
-        "coco/annotations/grounding_train2017.json",
-        "coco/annotations/caption_class_similarity.pth"
-    ),
-    "coco_2017_train_panoptic_refcoco": (
-        # This is the original panoptic annotation directory
-        "coco/panoptic_train2017",
-        "coco/annotations/panoptic_refcoco_unc.json",
-        "coco/panoptic_semseg_train2017",
-        "coco/annotations/refcoco_unc.json",
-        "coco/annotations/caption_class_similarity.pth"
-    ),
-    "coco_2017_train_panoptic_refcocop": (
-        # This is the original panoptic annotation directory
-        "coco/panoptic_train2017",
-        "coco/annotations/panoptic_refcocop_unc.json",
-        "coco/panoptic_semseg_train2017",
-        "coco/annotations/refcocop_unc.json",
-        "coco/annotations/caption_class_similarity.pth"
-    ),
-    "coco_2017_train_panoptic_refcocog": (
-        # This is the original panoptic annotation directory
-        "coco/panoptic_train2017",
-        "coco/annotations/panoptic_refcocog_umd_val.json",
-        "coco/panoptic_semseg_train2017",
-        "coco/annotations/refcocog_umd_val.json",
-        "coco/annotations/caption_class_similarity.pth"
-    ),
+
 
 }
 
@@ -176,7 +135,7 @@ def load_coco_panoptic_json(json_file, image_dir, gt_dir, semseg_dir, grounding_
 
 
 def register_coco_panoptic_annos_caption_grounding_sem_seg(
-    name, metadata, image_root, panoptic_root, panoptic_json, sem_seg_root, grounding_root, similarity_pth, instances_json
+    name, metadata, image_root, panoptic_root, panoptic_json, sem_seg_root, grounding_root, instances_json
 ):
     panoptic_name = '_'.join(name.split('_')[0:4])
     delattr(MetadataCatalog.get(panoptic_name), "thing_classes")
@@ -193,7 +152,7 @@ def register_coco_panoptic_annos_caption_grounding_sem_seg(
         semantic_name,
         lambda: load_coco_panoptic_json(panoptic_json, image_root, panoptic_root, sem_seg_root, grounding_root, metadata),
     )
-    MetadataCatalog.get('logistic').set(caption_similarity_pth=similarity_pth)
+
     MetadataCatalog.get(semantic_name).set(
         sem_seg_root=sem_seg_root,
         panoptic_root=panoptic_root,
@@ -210,7 +169,7 @@ def register_coco_panoptic_annos_caption_grounding_sem_seg(
 def register_all_coco_panoptic_annos_caption_grounding_sem_seg(root):
     for (
         prefix,
-        (panoptic_root, panoptic_json, semantic_root, grounding_root, similarity_pth),
+        (panoptic_root, panoptic_json, semantic_root, grounding_root),
     ) in _PREDEFINED_SPLITS_COCO_PANOPTIC_CAPTION.items():
         prefix_instances = '_'.join(prefix.split('_')[0:3])
         instances_meta = MetadataCatalog.get(prefix_instances)
@@ -225,8 +184,8 @@ def register_all_coco_panoptic_annos_caption_grounding_sem_seg(root):
             os.path.join(root, panoptic_json),
             os.path.join(root, semantic_root),
             os.path.join(root, grounding_root),
-            os.path.join(root, similarity_pth), 
-            instances_json,
+            
+            os.path.join(root, instances_json),
         )
 
 

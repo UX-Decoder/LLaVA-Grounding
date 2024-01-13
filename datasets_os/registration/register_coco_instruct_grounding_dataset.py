@@ -18,60 +18,22 @@ import pycocotools.mask as mask_util
 
 _PREDEFINED_SPLITS_COCO_PANOPTIC_CAPTION = {
 
-    "coco_instruct_train": (
-        "coco/train2017", # image_root
-        "coco/annotations/instances_train2017_instruct_grounding.json", # annot_root
-        "/comp_robot/zhanghao/datasets/llava/instruct150k_brackets/merged.json",
-    ),
-    "coco_instruct_train_end": (
-        "coco/train2017", # image_root
-        "coco/annotations/instances_train2017_instruct_grounding.json", # annot_root
-        "/comp_robot/zhanghao/datasets/llava/instruct150k_brackets/merged_end.json",
-    ),
-    "coco_instruct_train_end_v1_5": (
-        "coco/train2017", # image_root
-        "coco/annotations/instances_train2017_instruct_grounding_fix.json", # annot_root
-        "/comp_robot/zhanghao/datasets/llava/instruct150k_brackets_out_1/merged_end_fixed.json",
-    ),
-    "coco_instruct_train_v2": (
-        "coco/train2014", # image_root
-        "coco/annotations/instances_train2017_instruct_grounding_fix_v2.json", # annot_root
-        "/comp_robot/zhanghao/datasets/llava/instruct150k_brackets_out_1/merged_v2_fixed.json",
-    ),
+
     "coco_instruct_train_v3": (
         "coco/train2014", # image_root
         "coco/annotations/instances_train2017_instruct_grounding_fix_v3.json", # annot_root
-        "/comp_robot/zhanghao/datasets/llava/merged_v3_fixed.json",
+        "llava/annotations/merged_v3_fixed.json",
     ),
-    "coco_instruct_train_v2_detail":(
-        "coco/train2014", # image_root
-        "coco/annotations/instances_train2017_instruct_grounding_fix_v2.json", # annot_root
-        "/comp_robot/zhanghao/datasets/llava/detailed23k_brackets_out/detailed23k_succ_merged.json",
-    ),
-    "coco_instruct_train_v2_detail_end":(
-        "coco/train2014", # image_root
-        "coco/annotations/instances_train2017_instruct_grounding_fix_v2.json", # annot_root
-        "/comp_robot/zhanghao/datasets/llava/detailed23k_brackets_out/detailed23k_succ_merged_end.json",
-    ),
-    "coco_instruct_train_end_v2": (
-        "coco/train2014", # image_root
-        "coco/annotations/instances_train2017_instruct_grounding_fix_v2.json", # annot_root
-        "/comp_robot/zhanghao/datasets/llava/instruct150k_brackets_out_1/merged_end_v2_fixed.json",
-    ),
-    "coco_instruct_llava_bench": (
-        "coco/val2014", # image_root
-        "coco/annotations/instances_val2014.json", # annot_root
-        "/comp_robot/cv_public_dataset/coco/annotations/llava_bench_qa90_gpt4_conv_end.json",
-    ),
+
     "coco_interactive": (
         "coco/train2014", # image_root
         "coco/annotations/instances_train2014_filter.json", # annot_root
-        "/comp_robot/cv_public_dataset/CC12M_zh/LLaVA-CC3M-Pretrain-595K/llava_instruct_150k_instr.json",
+        "llava/annotations/llava_instruct_150k_instr.json",
     ),
     "coco_interactive_refcoco": (
         "coco/train2017", # image_root
         "coco/annotations/instances_train2017_refcoco.json", # annot_root
-        "/comp_robot/cv_public_dataset/coco/annotations/grounding_train2017_instruct.json",
+        "coco/annotations/grounding_train2017_instruct.json",
     ),
 }
 
@@ -97,9 +59,7 @@ def load_coco_json(image_root, annot_json,conversation, metadata):
         
     # build dictionary for grounding
     grd_dict = collections.defaultdict(list)
-    # for grd_ann in json_info['annotations']:
-    #     image_id = int(grd_ann["image_id"])
-    #     grd_dict[image_id].append(grd_ann)
+
     imgid2image = {}
     for image in json_info["images"]:
         image_id = image["id"]
@@ -124,10 +84,8 @@ def load_coco_json(image_root, annot_json,conversation, metadata):
         if 'gd_ls' not in d:
             d['gd_ls']=None
         if 'q_gd_ls' in d:
-            # d['q_gd_ls']=None
             conv_dict[image_id].append((d['conversations'],d['q_gd_ls']))
         else:
-            # d['gd_ls'] = None
             conv_dict[image_id].append((d['conversations'], d['gd_ls']))
 
     ret = []
@@ -145,19 +103,7 @@ def load_coco_json(image_root, annot_json,conversation, metadata):
                     "conversations": conv_dict[image_id],
                 }
             )
-    # for image in json_info["images"]:
-    #     image_id = int(image["id"])
-    #     image_file = os.path.join(image_root, image['file_name'])
-    #     grounding_anno = grd_dict[image_id]
-    #     if image_id in conv_dict and len(conv_dict[image_id])>0:
-    #         ret.append(
-    #             {
-    #                 "file_name": image_file,
-    #                 "image_id": image_id,
-    #                 "grounding_info": grounding_anno,
-    #                 "conversations": conv_dict[image_id],
-    #             }
-    #         )
+
     assert len(ret), f"No images found in {image_root}!"
     assert PathManager.isfile(ret[0]["file_name"]), ret[0]["file_name"]
     return ret
@@ -182,14 +128,14 @@ def register_coco(
 def register_all_coco(root):
     for (
         prefix,
-        (image_root, annot_root,conversation),
+        (image_root, annot_root,conversation_path),
     ) in _PREDEFINED_SPLITS_COCO_PANOPTIC_CAPTION.items():
         register_coco(
             prefix,
             get_metadata(),
             os.path.join(root, image_root),
             os.path.join(root, annot_root),
-            conversation,
+            conversation_path,
         )
 
 _root = os.getenv("DATASET", "datasets")

@@ -266,17 +266,7 @@ INPUT:
   PIXEL_STD: [58.395, 57.120, 57.375]
 
 DATASETS:
-  TRAIN: ["coco_instruct_train_end_v1_5","flickr_train"]#,"coco_2017_train_panoptic_ref_full_with_sem_seg_caption_grounding"]#,"sam_train","pascal_part_train"]#,"paco_train","partimagenet_train"]
-#  TRAIN: ["coco""pascal_part_train","paco_train","partimagenet_train"]
-#  TRAIN: ["pascal_part_train"]
-  # open vocabulary segmentation evaluation.
-  TEST: ["flickr_val"]
-#  TEST: ["ade20k_panoptic_val", "ade20k_full_sem_seg_val", "sunrgbd_37_val_seg", "scannet_21_val_seg", "scannet_21_panoptic_val", "scannet_41_val_seg", "cityscapes_fine_panoptic_val", "cityscapes_fine_instance_seg_val", "cityscapes_fine_sem_seg_val", "bdd10k_val_sem_seg", "bdd10k_40_panoptic_val"]
-  # Supervised metrics evaluation.
-  # TEST: ["vlp_captioning_val", "refcocog_val_umd", "vlp_val"]
-  CLASS_CONCAT: false
-  SIZE_DIVISIBILITY: 32
-  PROPOSAL_FILES_TRAIN: []
+  TRAIN: ["coco_instruct_train_v3","flickr_train"]
 
 DATALOADER:
   FILTER_EMPTY_ANNOTATIONS: False
