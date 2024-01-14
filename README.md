@@ -6,14 +6,19 @@
 <!-- [[`Paper`](xxx)] [[`BibTex`](#black_nib-citation)] -->
 
 ## :fire: News
+[2024/1/14] Our training code is released.
 [2023/12/6] Our paper is available in arxiv.
 
 
 ## Contents
-- [Install](#install)
-- [LLaVA-Grounding Weights](#llava-grounding-weights)
-- [Demo](#demo)
-- [Model Zoo](docs/MODEL_ZOO.md)
+- [🌋 LLaVA-Grounding: Grounded Visual Chat with Large Multimodal Models](#-llava-grounding-grounded-visual-chat-with-large-multimodal-models)
+  - [:fire: News](#fire-news)
+  - [Contents](#contents)
+    - [Install](#install)
+    - [LLaVA-Grounding Weights](#llava-grounding-weights)
+    - [Demo](#demo)
+    - [Training](#training)
+    - [Citation](#citation)
 
 ### Install
 1. Clone this repository and navigate to LLaVA-Grounding fold:
@@ -49,6 +54,19 @@ CUDA_VISIBLE_DEVICES=0 python gradio_demo/LLaVA_G_Demo.py --path_vision_cfg conf
 
 Please refer to our [Online Demo](https://llava-grounding.deepdataspace.com/) for the more detailed user's guidence.
 
+### Training
+Stage 1
+```shell
+bash scripts/pretrain_joint.py
+```
+Stage 2
+```shell
+bash scripts/finetune.py
+```
+Stage 3
+```shell
+bash scripts/finetune_visual_prompt.py
+```
 ### Citation
 If you find LLaVA-Grounding useful for your research and applications, please cite using this BibTeX:
 ```bibtex
