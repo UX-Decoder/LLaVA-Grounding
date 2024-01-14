@@ -78,11 +78,4 @@ If you find LLaVA-Grounding useful for your research and applications, please ci
       year={2023},
       booktitle={arXiv}
 }
-
-@misc{liu2023llava,
-      title={Visual Instruction Tuning}, 
-      author={Liu, Haotian and Li, Chunyuan and Wu, Qingyang and Lee, Yong Jae},
-      publisher={arXiv:2304.08485},
-      year={2023}
-}
 ```
