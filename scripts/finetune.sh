@@ -21,7 +21,7 @@ deepspeed llava/train/train_joint_2st.py \
     --deepspeed scripts/zero2.json \
     --model_name_or_path ckpts/vicuna/vicuna-7b-v1.3/ \
     --whole_model $load \
-    --load_vision True \
+    --load_model True \
     --version $PROMPT_VERSION \
     --data_path datasets/llava/annotations/llava_instruct_150k.json \
     --image_folder datasets/coco/train2017/ \
@@ -53,7 +53,7 @@ deepspeed llava/train/train_joint_2st.py \
     --report_to wandb \
     --max_steps 10000 \
     --config_file \
-    configs/openseed/openseed_swint_lang_joint_2st_v3_data.yaml \
+    configs/openseed/openseed_swint_lang_joint_2st.yaml \
     --opt \
     MODEL.DECODER.WEIGHT_MULTIPLIER=0.1,MODEL.DECODER.COST_CLASS_WEIGHT=4.0,flickr.TRAIN.BATCH_SIZE_TOTAL=6,coco_instruct.TEST.BATCH_SIZE_TOTAL=${bs},coco_instruct.TRAIN.BATCH_SIZE_TOTAL=${bs},MODEL.WEIGHTS=ckpts/openseed_o365.pt \
     >> $out_dir/log 2>&1

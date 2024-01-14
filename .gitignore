@@ -19,7 +19,15 @@ symmary_results
 eval_gpt4
 vis_results_pdf_precision
 vis_results_pdf_recall
-
+output/
+datasets/
+output
+datasets
 *.log
 *.json
+__pycache__/
+*/__pycache__
+*/*/__pycache__
+*/*/*/__pycache__
+*/*/*/*/__pycache__
 gradio_demo/examples/*.mp4

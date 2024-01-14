@@ -7,6 +7,7 @@
 
 ## :fire: News
 [2024/1/14] Our training code is released.
+
 [2023/12/6] Our paper is available in arxiv.
 
 
