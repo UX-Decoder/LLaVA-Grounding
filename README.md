@@ -19,6 +19,9 @@
     - [LLaVA-Grounding Weights](#llava-grounding-weights)
     - [Demo](#demo)
     - [Training data](#training-data)
+      - [Flickr30k](#flickr30k)
+      - [COCO](#coco)
+      - [LLaVA](#llava)
     - [Training](#training)
     - [Citation](#citation)
 
@@ -82,9 +85,13 @@ data
 │          ├── llava_instruct_150k.json
 │          ├── llava_instruct_150k_visual_prompt.json
 
-
 ```
-
+#### Flickr30k
+Please refer to [MDETR's pre-processed flickr30k data](https://github.com/ashkamath/mdetr/blob/main/.github/flickr.md).
+#### COCO
+Please download coco train2014 and train2017 images and panoptic segmentation and semantic segmentation data. Other annoations can be downloaded [here]().
+#### LLaVA
+The processed annotations can be downloaded [here]().
 ### Training
 Stage 1
 ```shell
@@ -107,5 +114,12 @@ If you find LLaVA-Grounding useful for your research and applications, please ci
       author={Hao Zhang and Hongyang Li and Feng Li and Tianhe Ren and Xueyan Zou and Shilong Liu and Shijia Huang and Jianfeng Gao and Lei Zhang and Chunyuan Li and Jianwei Yang},
       year={2023},
       booktitle={arXiv}
+}
+
+@misc{liu2023llava,
+      title={Visual Instruction Tuning}, 
+      author={Liu, Haotian and Li, Chunyuan and Wu, Qingyang and Lee, Yong Jae},
+      publisher={arXiv:2304.08485},
+      year={2023}
 }
 ```
