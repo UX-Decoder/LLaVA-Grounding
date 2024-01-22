@@ -21,14 +21,14 @@ _PREDEFINED_SPLITS_COCO_PANOPTIC_CAPTION = {
 
     "coco_instruct_train_v3": (
         "coco/train2014", # image_root
-        "coco/annotations/instances_train2017_instruct_grounding_fix_v3.json", # annot_root
-        "llava/annotations/merged_v3_fixed.json",
+        "coco/annotations/instances_train2017_gvc.json", # annot_root
+        "llava/annotations/grounded_visual_chat_data.json",
     ),
 
     "coco_interactive": (
         "coco/train2014", # image_root
         "coco/annotations/instances_train2014_filter.json", # annot_root
-        "llava/annotations/llava_instruct_150k_instr.json",
+        "llava/annotations/llava_instruct_150k_visual_prompt.json",
     ),
     "coco_interactive_refcoco": (
         "coco/train2017", # image_root

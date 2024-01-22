@@ -18,6 +18,7 @@
     - [Install](#install)
     - [LLaVA-Grounding Weights](#llava-grounding-weights)
     - [Demo](#demo)
+    - [Training data](#training-data)
     - [Training](#training)
     - [Citation](#citation)
 
@@ -54,6 +55,35 @@ CUDA_VISIBLE_DEVICES=0 python gradio_demo/LLaVA_G_Demo.py --path_vision_cfg conf
 ```
 
 Please refer to our [Online Demo](https://llava-grounding.deepdataspace.com/) for the more detailed user's guidence.
+### Training data
+```text
+data
+├── flickr30k_entities
+│   ├── train/
+│   ├── val/
+│   ├── annotations
+│          ├──final_flickr_separateGT_train.json
+│          ├──final_flickr_separateGT_val.json
+├── coco
+│   ├── train2014/
+│   ├── train2017/
+│   ├── panoptic_train2017/
+│   ├── panoptic_semseg_train2017/
+│   ├── annotations
+│   │      ├──instances_train2017.json
+│   │      ├──instances_train2017_gvc.json
+│   │      ├──grounded_visual_chat_data.json
+│   │      ├──instances_train2014_filter.json
+│   │      ├──panoptic_train2017_filter.json
+│   │      ├──grounding_train2017.json
+├── llava
+│   ├── annotations
+│          ├── cap600k_brackets_all.json
+│          ├── llava_instruct_150k.json
+│          ├── llava_instruct_150k_visual_prompt.json
+
+
+```
 
 ### Training
 Stage 1

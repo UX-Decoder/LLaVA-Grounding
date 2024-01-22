@@ -16,11 +16,11 @@ from detectron2.utils.file_io import PathManager
 _PREDEFINED_SPLITS = {
 
     "flickr_val": (
-        "goldg/flickr30k_entities/val", # image_root
+        "flickr30k_entities/val", # image_root
         "final_flickr_separateGT_val.json", # # anno_path
     ),
     "flickr_train": (
-        "goldg/flickr30k_entities/train", # image_root
+        "flickr30k_entities/train", # image_root
         "final_flickr_separateGT_train.json", # # anno_path
     ),
 }
