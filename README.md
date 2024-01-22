@@ -89,9 +89,9 @@ data
 #### Flickr30k
 Please refer to [MDETR's pre-processed flickr30k data](https://github.com/ashkamath/mdetr/blob/main/.github/flickr.md).
 #### COCO
-Please download coco train2014 and train2017 images and panoptic segmentation and semantic segmentation data. Other annoations can be downloaded [here]().
+Please download coco train2014 and train2017 images and panoptic segmentation and semantic segmentation data. Other annoations can be downloaded [here](https://github.com/UX-Decoder/LLaVA-Grounding/releases/tag/train_data).
 #### LLaVA
-The processed annotations can be downloaded [here]().
+The processed annotations can be downloaded [here](https://github.com/UX-Decoder/LLaVA-Grounding/releases/tag/train_data).
 ### Training
 Stage 1
 ```shell
